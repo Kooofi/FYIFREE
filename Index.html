@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FYIFREE – Book the month, pick the day later</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f2f5f9;--card:#fff;--ink:#0f1b2d;--mut:#5b6b80;--line:#d6dee9;--acc:#0b6e8a;--acc2:#f2b705;--ok:#1a8f5a;--bad:#c2410c;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0c1522;--card:#14223a;--ink:#e8eef7;--mut:#9fb0c6;--line:#27395a;--acc:#45b6d6;--acc2:#f2c230;--ok:#4cc38a;--bad:#ff9a62;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0c1522;--card:#14223a;--ink:#e8eef7;--mut:#9fb0c6;--line:#27395a;--acc:#45b6d6;--acc2:#f2c230;--ok:#4cc38a;--bad:#ff9a62;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+h1,h2,h3{font-family:Sora,system-ui,sans-serif;margin:0;letter-spacing:-.02em}
+.wrap{max-width:980px;margin:0 auto;padding:16px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:8px 0 14px}
+.logo{font:800 28px Sora,sans-serif;letter-spacing:-.04em}.logo i{font-style:normal;color:var(--acc2);background:var(--ink);padding:0 6px;border-radius:6px;margin-left:2px}
+.sub{color:var(--mut);margin:2px 0 0;font-size:14px}
+nav{display:flex;gap:6px;flex-wrap:wrap}
+nav button,.btn{font:600 14px system-ui;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 14px;border-radius:999px;cursor:pointer}
+nav button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.pri{background:var(--acc2);color:#1b1500;border-color:var(--acc2);font-weight:700}.btn.out{background:transparent}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end}
+label{display:block;font-size:13px;color:var(--mut);margin-bottom:3px}
+select,input{width:100%;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:8px}
+.cal b{font-size:12px;color:var(--mut);text-align:center;font-weight:600}
+.day{min-height:52px;border-radius:8px;padding:4px 6px;font-size:12px;background:color-mix(in srgb,var(--acc) calc(var(--i,0)*55%),var(--card));border:1px solid var(--line);display:flex;flex-direction:column;justify-content:space-between}
+.day.x{background:repeating-linear-gradient(45deg,var(--card),var(--card) 6px,var(--line) 6px,var(--line) 7px);color:var(--mut)}
+.day.pick{cursor:pointer;border-color:var(--ink)}.day.sel{outline:3px solid var(--acc2)}
+.day.pass{opacity:.4}.day strong{font-size:13px}
+.pass-ticket{display:grid;grid-template-columns:1fr auto;gap:0;border:1px solid var(--line);border-radius:14px;background:var(--card);margin-bottom:14px;overflow:hidden}
+.pass-ticket .main{padding:16px}.pass-ticket .stub{padding:16px;border-left:2px dashed var(--line);background:color-mix(in srgb,var(--acc2) 14%,var(--card));min-width:190px;display:flex;flex-direction:column;gap:6px;justify-content:center}
+.big{font:800 26px Sora,sans-serif}.mut{color:var(--mut);font-size:13px}.tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;background:var(--bg);border:1px solid var(--line);margin-right:4px}
+.ok{color:var(--ok);font-weight:700}.bad{color:var(--bad);font-weight:700}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.scroll{overflow-x:auto}pre{margin:0;font:12px/1.4 ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-word}
+.log{border-left:3px solid var(--acc);padding:6px 10px;margin-bottom:8px;background:var(--bg);border-radius:0 8px 8px 0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;z-index:9;max-width:90vw}
+@media(max-width:600px){.pass-ticket{grid-template-columns:1fr}.pass-ticket .stub{border-left:0;border-top:2px dashed var(--line)}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head><body><div class="wrap" id="app"></div>
+<script>
+/* ---------- Dummy data (all fictional) ---------- */
+const AIRPORTS=[["BLR","Bengaluru"],["DEL","Delhi"],["BOM","Mumbai"],["MAA","Chennai"],["HYD","Hyderabad"],["CCU","Kolkata"]];
+const AIRLINES=[{id:"SN",name:"SkyNest Air",m:1,tag:"Full service"},{id:"JT",name:"JetTrail",m:.88,tag:"Low cost"},{id:"AV",name:"AeroVista",m:1.14,tag:"Premium"}];
+const REASONS={medical:"Medical / surgery date pending",delivery:"Expected delivery (pregnancy)",business:"Urgent business",personal:"Personal / family commitment"};
+const FREE_CHANGE=["medical","delivery"];
+const D=864e5,hash=s=>{let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0},rnd=s=>hash(s)%1000/1000;
+const inr=n=>"₹"+Math.round(n).toLocaleString("en-IN");
+const S={tab:"search",pend:null,v:{step:1},clock:0,locks:[],offers:null,cal:null,q:null,log:[],sel:{},toast:""};
+const base0=new Date();base0.setHours(0,0,0,0);
+const now=()=>new Date(+base0+S.clock*D),ymd=d=>d.toISOString?new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10):d;
+const fmt=d=>new Date(d).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"});
+const monthKey=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+const monthLabel=k=>new Date(k+"-01T00:00").toLocaleDateString("en-IN",{month:"long",year:"numeric"});
+/* ---------- Pricing engine ---------- */
+function fare(from,to,al,date){const route=[from,to].sort().join(""),base=2800+hash(route)%2600,out=Math.ceil((date-now())/D);
+ const prem=out<3?1.9:out<7?1.7:out<14?1.4:out<21?1.2:1,wk=[0,5,6].includes(date.getDay())?1.12:1,noise=.9+rnd(route+al.id+ymd(date))*.25;
+ const seats=rnd("s"+route+al.id+ymd(date))>.9?0:2+Math.floor(rnd("t"+route+al.id+ymd(date))*38);
+ return{date:ymd(date),fare:Math.round(base*al.m*prem*wk*noise/10)*10,seats,daysOut:out}}
+function monthDays(key){const[y,m]=key.split("-").map(Number),n=new Date(y,m,0).getDate(),a=[];for(let i=1;i<=n;i++){const d=new Date(y,m-1,i);if(d>=new Date(+now()+D))a.push(d)}return a}
+const p75=a=>a.slice().sort((x,y)=>x-y)[Math.floor(a.length*.75)]||0;
+/* ---------- Mock API layer ---------- */
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function api(method,path,body,fn){const t=performance.now();await sleep(120+Math.random()*220);let res,status=200;
+ try{res=fn()}catch(e){status=422;res={error:e.message}}
+ S.log.unshift({method,path,status,ms:Math.round(performance.now()-t),body,res});S.log=S.log.slice(0,30);
+ if(status>=400)throw new Error(res.error);return res}
+const API={
+ airports:()=>api("GET","/v1/airports",null,()=>AIRPORTS.map(([code,city])=>({code,city}))),
+ airlines:()=>api("GET","/v1/airlines",null,()=>AIRLINES),
+ calendar:(q)=>api("GET","/v1/fares/calendar",q,()=>monthDays(q.month).map(d=>{const f=AIRLINES.map(a=>fare(q.from,q.to,a,d)).filter(x=>x.seats);return{date:ymd(d),minFare:f.length?Math.min(...f.map(x=>x.fare)):null}})),
+ searchMonth:(q)=>api("POST","/v1/search/month",q,()=>AIRLINES.map(a=>{const days=monthDays(q.month).map(d=>fare(q.from,q.to,a,d)).filter(x=>x.seats);
+   if(!days.length)throw new Error("No inventory left in that month.");const cap=p75(days.map(x=>x.fare));
+   return{airline:a,from:Math.min(...days.map(x=>x.fare)),cap,fee:Math.round(cap*.06*q.pax),openDays:days.length,lastMinute:Math.round(cap*1.7)}})),
+ forecast:(q)=>api("GET","/v1/pricing/forecast",q,()=>({route:q.from+"-"+q.to,month:q.month,advanceAvg:Math.round(AIRLINES.reduce((s,a)=>s+p75(monthDays(q.month).map(d=>fare(q.from,q.to,a,d).fare)),0)/3),lastMinuteMultiplier:"1.7x–1.9x within 7 days"})),
+ createLock:(b)=>api("POST","/v1/locks",b,()=>{const o=S.offers.find(x=>x.airline.id===b.airline);const l={id:"FYI"+(1000+S.locks.length*7+hash(b.airline+b.month)%90),...b,airlineName:o.airline.name,cap:o.cap,fee:o.fee,status:"LOCKED",changes:0,created:ymd(now())};S.locks.unshift(l);return l}),
+ verifyEmergency:(b)=>api("POST","/v1/verify/emergency",b,()=>{if(!b.issuer||!b.ref||!b.date||!b.file)throw new Error("Add the issuer, reference number, expected date and a document.");if(/fake/i.test(b.ref)||b.ref.length<4)throw new Error("The issuer could not confirm this reference. Check it and try again.");return{status:"VERIFIED",method:"Issuer callback (simulated)"}}),
+ verifyIdentity:(b)=>api("POST","/v1/verify/identity",b,()=>{if(!/^\d{4}$/.test(b.last4))throw new Error("Enter exactly the last 4 digits of your ID.");if(b.name.length<3)throw new Error("Enter your full name as printed on the ID.");if(b.last4==="0000")throw new Error("This ID could not be verified with the issuing authority.");return{status:"VERIFIED",check:"Name and ID match (simulated)"}}),
+ declare:(b)=>api("POST","/v1/declarations",b,()=>{if(b.acks<4||b.signed.trim().toLowerCase()!==b.name.trim().toLowerCase())throw new Error("Tick all four boxes and type your full name exactly as on your ID.");return{status:"ACCEPTED",at:new Date().toISOString()}}),
+ flag:(id,why)=>api("POST","/v1/locks/"+id+"/flag",{why},()=>{const l=S.locks.find(x=>x.id===id);l.status="CANCELLED";l.refund=0;l.flag=why;return l}),
+ listLocks:()=>api("GET","/v1/locks",null,()=>S.locks),
+ availability:(id)=>api("GET","/v1/locks/"+id+"/availability",null,()=>{const l=S.locks.find(x=>x.id===id),a=AIRLINES.find(x=>x.id===l.airline);
+   return monthDays(l.month).map(d=>{const f=fare(l.from,l.to,a,d);return{...f,pay:Math.min(f.fare,l.cap),bookable:f.seats>0&&f.daysOut>=2}})}),
+ confirm:(id,date)=>api("POST","/v1/locks/"+id+"/confirm",{date},()=>{const l=S.locks.find(x=>x.id===id),a=AIRLINES.find(x=>x.id===l.airline),f=fare(l.from,l.to,a,new Date(date+"T00:00"));
+   if(f.seats<1)throw new Error("Sold out on that date.");if(f.daysOut<2)throw new Error("Confirm at least 48 hours before departure.");
+   l.status="CONFIRMED";l.date=date;l.paid=Math.min(f.fare,l.cap)*l.pax;l.saved=Math.max(0,f.fare-l.cap)*l.pax;l.pnr=Math.random().toString(36).slice(2,8).toUpperCase();return l}),
+ change:(id,month)=>api("POST","/v1/locks/"+id+"/change",{month},()=>{const l=S.locks.find(x=>x.id===id);if(l.status!=="LOCKED")throw new Error("Only open locks can move.");
+   const free=FREE_CHANGE.includes(l.reason)&&l.changes===0,fee=free?0:Math.round(l.fee*.25);l.month=month;l.changes++;l.changeFee=(l.changeFee||0)+fee;return{lock:l,changeFee:fee}}),
+ cancel:(id)=>api("DELETE","/v1/locks/"+id,null,()=>{const l=S.locks.find(x=>x.id===id);const refund=l.status==="CONFIRMED"?Math.round(l.paid*.8):0;l.status="CANCELLED";l.refund=refund;return l})};
+/* ---------- UI ---------- */
+const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function toast(t){S.toast=t;render();setTimeout(()=>{S.toast="";render()},2800)}
+function months(){return[...Array(6)].map((_,i)=>{const d=new Date(now().getFullYear(),now().getMonth()+i,1);return monthKey(d)})}
+function calHTML(days,opts={}){if(!days.length)return"";const vals=days.map(d=>d.minFare??d.pay).filter(Boolean),lo=Math.min(...vals),hi=Math.max(...vals);
+ const first=new Date(days[0].date+"T00:00").getDay();let h='<div class="cal">'+["Su","Mo","Tu","We","Th","Fr","Sa"].map(x=>"<b>"+x+"</b>").join("")+"<span></span>".repeat(first);
+ for(const d of days){const v=d.minFare??d.pay,n=new Date(d.date+"T00:00").getDate();
+  if(opts.pick){const ok=d.bookable;h+=`<div class="day ${ok?"pick":"x"} ${S.sel[opts.id]===d.date?"sel":""}" ${ok?`tabindex="0" role="button" onclick="S.sel['${opts.id}']='${d.date}';render()" onkeydown="if(event.key==='Enter')this.click()"`:""} style="--i:${ok?(v-lo)/((hi-lo)||1):0}"><span>${n}</span><strong>${ok?inr(v):d.seats?"<48h":"Full"}</strong></div>`}
+  else h+=`<div class="day ${v?"":"x"}" style="--i:${v?(v-lo)/((hi-lo)||1):0}"><span>${n}</span><strong>${v?inr(v):"Full"}</strong></div>`}
+ return h+"</div>"}
+function viewSearch(){const q=S.q||{from:"BLR",to:"DEL",month:months()[1],pax:1,reason:"medical"};
+ const opt=(a,v,f)=>a.map(x=>`<option value="${f?x[0]:x}" ${(f?x[0]:x)==v?"selected":""}>${f?x[1]+" ("+x[0]+")":monthLabel(x)}</option>`).join("");
+ let h=`<div class="card"><h2>Know the month? Book the month.</h2><p class="sub">Lock a fare cap for any month now. Pick your exact day up to 48 hours before you fly.</p><br>
+ <div class="form"><div><label for="f">From</label><select id="f">${opt(AIRPORTS,q.from,1)}</select></div><div><label for="t">To</label><select id="t">${opt(AIRPORTS,q.to,1)}</select></div>
+ <div><label for="m">Travel month</label><select id="m">${opt(months(),q.month)}</select></div><div><label for="p">Passengers</label><input id="p" type="number" min="1" max="6" value="${q.pax}"></div>
+ <div><label for="r">Reason</label><select id="r">${Object.entries(REASONS).map(([k,v])=>`<option value="${k}" ${k==q.reason?"selected":""}>${v}</option>`).join("")}</select></div>
+ <button class="btn pri" onclick="search()">Search month</button></div></div>`;
+ if(S.offers){h+=`<div class="card"><h3>Cheapest fare per day, ${monthLabel(S.q.month)}</h3><p class="mut">Darker is pricier. Hatched days are sold out. Forecast: ${S.fc.advanceAvg?`advance fares average ${inr(S.fc.advanceAvg)}, last-minute runs ${S.fc.lastMinuteMultiplier}.`:""}</p>${calHTML(S.cal)}</div>`;
+  h+=S.offers.map(o=>`<div class="pass-ticket"><div class="main"><div class="row"><h3>${o.airline.name}</h3><span class="tag">${o.airline.tag}</span></div><p class="mut">${S.q.from} → ${S.q.to} · ${o.openDays} open days in ${monthLabel(S.q.month)}</p>
+   <p>From <b>${inr(o.from)}</b> · fare cap if you lock: <b>${inr(o.cap)}</b> <span class="mut">(last-minute typically ${inr(o.lastMinute)})</span></p></div>
+   <div class="stub"><span class="mut">Month-Lock fee</span><span class="big">${inr(o.fee)}</span><span class="mut">Fare paid only when you confirm a date</span><button class="btn pri" onclick="lock('${o.airline.id}')">Verify and lock</button></div></div>`).join("")}
+ return h}
+async function search(){const q={from:$("#f").value,to:$("#t").value,month:$("#m").value,pax:Math.max(1,Math.min(6,+$("#p").value||1)),reason:$("#r").value};
+ if(q.from===q.to)return toast("Choose two different airports.");S.q=q;
+ try{await API.airports();await API.airlines();[S.cal,S.offers,S.fc]=await Promise.all([API.calendar(q),API.searchMonth(q),API.forecast(q)])}catch(e){S.offers=null;return toast(e.message)}render()}
+function lock(id){S.pend=id;S.v={step:1};S.tab="verify";render()}
+function viewLocks(){if(!S.locks.length)return'<div class="card"><h3>No locks yet</h3><p class="mut">Search a month and tap Lock this month to start.</p></div>';
+ return `<div class="card row"><span>Demo clock: <b>${fmt(now())}</b></span><button class="btn out" onclick="S.clock+=7;render()">+7 days</button><button class="btn out" onclick="S.clock+=1;render()">+1 day</button><span class="mut">Move time forward to see fares climb while your cap holds.</span></div>`+
+ S.locks.map(l=>{const done=l.status!=="LOCKED",free=FREE_CHANGE.includes(l.reason)&&l.changes===0;
+  let h=`<div class="pass-ticket"><div class="main"><div class="row"><h3>${l.from} → ${l.to}</h3><span class="tag">${l.airlineName}</span><span class="tag">${l.id}</span><span class="tag ok">Verified · ticket in name of ${esc(l.holder)}</span><span class="${l.status==="CONFIRMED"?"ok":l.status==="CANCELLED"?"bad":""}">${l.status}</span></div>
+  <p class="mut">${l.pax} traveller${l.pax>1?"s":""} · ${REASONS[l.reason]} · window ${monthLabel(l.month)}</p>
+  <p>Fare cap per person: <b>${inr(l.cap)}</b> · lock fee paid: <b>${inr(l.fee)}</b>${l.changeFee?` · change fees: ${inr(l.changeFee)}`:""}</p>`;
+  if(l.status==="CONFIRMED")h+=`<p class="ok">Confirmed for ${fmt(l.date)} · PNR ${l.pnr} · paid ${inr(l.paid)}${l.saved?` · saved ${inr(l.saved)} vs. today’s fare`:""}</p>`;
+  if(l.status==="CANCELLED")h+=`<p class="mut">${l.flag?`<span class="bad">Flagged: ${esc(l.flag)} Tickets cancelled, fee and fare forfeited. The case may be referred for legal action.</span> `:""}Cancelled${l.refund?`, refund ${inr(l.refund)}`:". Lock fee is non-refundable."}</p>`;
+  if(!done)h+=`<p class="mut">Pick a date (at least 48 hours ahead). You pay the lower of today’s fare and your cap.</p><div id="av-${l.id}">${l.av?calHTML(l.av,{pick:1,id:l.id}):'<button class="btn out" onclick="avail(\''+l.id+'\')">Show open dates</button>'}</div>`;
+  h+=`</div><div class="stub">`;
+  if(!done){h+=`<button class="btn pri" ${S.sel[l.id]?"":"disabled"} onclick="confirmDate('${l.id}')">Confirm ${S.sel[l.id]?fmt(S.sel[l.id]):"date"}</button>
+   <label for="mv-${l.id}">Move to another month</label><select id="mv-${l.id}" onchange="move('${l.id}',this.value)"><option value="">${free?"Free change (once)":"Change fee "+inr(l.fee*.25)}</option>${months().filter(m=>m!==l.month).map(m=>`<option value="${m}">${monthLabel(m)}</option>`).join("")}</select>`}
+  if(l.status!=="CANCELLED")h+=`<button class="btn out" onclick="cancel('${l.id}')">Cancel</button><button class="btn out" onclick="flag('${l.id}')">Demo: flag as fraud</button>`;
+  return h+"</div></div>"}).join("")}
+async function avail(id){try{const l=S.locks.find(x=>x.id===id);l.av=await API.availability(id);l.av.forEach(d=>d.minFare=undefined);render()}catch(e){toast(e.message)}}
+async function confirmDate(id){try{const l=await API.confirm(id,S.sel[id]);delete S.sel[id];toast("Booked. PNR "+l.pnr)}catch(e){toast(e.message)}}
+async function move(id,m){if(!m)return;try{const r=await API.change(id,m);S.locks.find(x=>x.id===id).av=null;toast(r.changeFee?"Moved. Fee "+inr(r.changeFee):"Moved at no charge.")}catch(e){toast(e.message)}}
+async function cancel(id){try{await API.cancel(id);toast("Cancelled.")}catch(e){toast(e.message)}}
+function viewApi(){return`<div class="card"><h3>API console</h3><p class="mut">Every action calls a mock endpoint. Replace <code>api()</code> with <code>fetch()</code> to go live.</p>
+ <div class="row">${["GET /v1/airports","GET /v1/airlines","GET /v1/fares/calendar","POST /v1/search/month","GET /v1/pricing/forecast","POST /v1/locks","GET /v1/locks","GET /v1/locks/{id}/availability","POST /v1/locks/{id}/confirm","POST /v1/locks/{id}/change","DELETE /v1/locks/{id}","POST /v1/verify/emergency","POST /v1/verify/identity","POST /v1/declarations","POST /v1/locks/{id}/flag"].map(x=>`<span class="tag">${x}</span>`).join("")}</div><br>
+ <button class="btn out" onclick="API.listLocks().then(render)">GET /v1/locks</button></div>`+
+ (S.log.length?S.log.map(l=>`<div class="log"><b>${l.method} ${l.path}</b> <span class="${l.status<400?"ok":"bad"}">${l.status}</span> <span class="mut">${l.ms} ms</span><div class="scroll"><pre>${esc(JSON.stringify(l.res,null,1).slice(0,420))}</pre></div></div>`).join(""):'<p class="mut">No calls yet. Run a search.</p>')}
+const RULES=[["Tickets are name-locked","Every Month-Lock ticket is issued in the verified traveller’s name. The government ID must match at check-in. Transfers and name changes are not allowed."],["No resale or black marketing","Selling, offering or advertising a locked or confirmed ticket to anyone else is prohibited. We monitor listings and booking patterns."],["Genuine emergencies only","Medical, delivery and urgent-commitment claims need supporting documents. We may confirm them directly with the hospital, doctor or employer."],["If we find a violation","If an emergency is fake or created, or a ticket is resold, we cancel all your locks and tickets with no refund, forfeit all fees, block your account and may take legal action under applicable law."],["Your data","We use your ID and documents only to verify your request. This demo stores only the last 4 digits of an ID, never the full number."]];
+const ruleList=()=>RULES.map(r=>`<p><b>${r[0]}.</b> ${r[1]}</p>`).join("");
+function viewRules(){return`<div class="card"><h3>Rules and penalties</h3><p class="mut">Please read before you lock a month.</p>${ruleList()}</div>`}
+function viewVerify(){if(!S.pend||!S.offers)return'<div class="card"><p>Search a month first, then choose Verify and lock.</p></div>';
+ const v=S.v,o=S.offers.find(x=>x.airline.id===S.pend),st=["Emergency proof","Government ID","Declaration"];
+ let h=`<div class="card"><h2>Verify before you lock</h2><p class="sub">${o.airline.name} · ${S.q.from} → ${S.q.to} · ${monthLabel(S.q.month)} · lock fee ${inr(o.fee)}. Checks keep these fares for people who genuinely need them.</p><div class="row" style="margin-top:10px">${st.map((s,i)=>`<span class="tag" style="${v.step===i+1?"background:var(--acc2);color:#1b1500;font-weight:700":""}">Step ${i+1}: ${s}</span>`).join("")}</div></div>`;
+ if(v.step===1)h+=`<div class="card"><h3>Step 1: Show your emergency</h3><div class="form"><div><label for="dt">Document type</label><select id="dt"><option>Hospital admission or surgery letter</option><option>Doctor’s certificate with expected delivery date</option><option>Employer or business letter</option><option>Other supporting document</option></select></div><div><label for="hosp">Hospital, doctor or employer</label><input id="hosp"></div><div><label for="ref">Reference or case number</label><input id="ref"></div><div><label for="ed">Expected date of event</label><input id="ed" type="date"></div><div><label for="fl">Upload document (PDF or photo)</label><input id="fl" type="file" accept=".pdf,image/*"></div><button class="btn pri" onclick="vStep1()">Check emergency</button></div><p class="mut">Demo: a reference containing “fake” fails the issuer check. The file stays in your browser.</p></div>`;
+ if(v.step===2)h+=`<div class="card"><h3>Step 2: Verify your government ID</h3><p class="ok">Emergency proof verified.</p><div class="form"><div><label for="it">ID type</label><select id="it"><option>Aadhaar</option><option>Passport</option><option>Driving licence</option><option>Voter ID</option></select></div><div><label for="nm">Full name exactly as on ID</label><input id="nm"></div><div><label for="l4">Last 4 digits of ID number</label><input id="l4" maxlength="4" inputmode="numeric"></div><button class="btn pri" onclick="vStep2()">Verify ID</button></div><p class="mut">We never ask for the full number here. Demo: ending 0000 fails.</p></div>`;
+ if(v.step===3)h+=`<div class="card"><h3>Step 3: Read and accept</h3><p class="ok">Emergency and ID verified for ${esc(v.name)}.</p>${ruleList()}<div style="margin:10px 0"><label><input class="ack" type="checkbox" style="width:auto"> This ticket is for me and I will not resell or transfer it.</label><label><input class="ack" type="checkbox" style="width:auto"> My emergency is genuine and my documents are true.</label><label><input class="ack" type="checkbox" style="width:auto"> If I break these rules, my tickets may be cancelled with no refund.</label><label><input class="ack" type="checkbox" style="width:auto"> I understand FYIFREE may take legal action for fraud or black marketing.</label></div><div class="form"><div><label for="sg">Type your full name to sign</label><input id="sg"></div><button class="btn pri" onclick="vFinish()">Accept and lock month</button></div></div>`;
+ return h}
+async function vStep1(){const d={doc:$("#dt").value,issuer:$("#hosp").value.trim(),ref:$("#ref").value.trim(),date:$("#ed").value,file:$("#fl").files[0]?.name||""};try{await API.verifyEmergency(d);Object.assign(S.v,d,{step:2});render()}catch(e){toast(e.message)}}
+async function vStep2(){const d={type:$("#it").value,name:$("#nm").value.trim(),last4:$("#l4").value.trim()};try{await API.verifyIdentity(d);Object.assign(S.v,{idType:d.type,name:d.name,last4:d.last4,step:3});render()}catch(e){toast(e.message)}}
+async function vFinish(){const acks=document.querySelectorAll(".ack:checked").length;try{await API.declare({name:S.v.name,signed:$("#sg").value,acks});const q=S.q,l=await API.createLock({airline:S.pend,from:q.from,to:q.to,month:q.month,pax:q.pax,reason:q.reason,holder:S.v.name,idType:S.v.idType,idLast4:S.v.last4,proof:S.v.doc,declared:true});S.pend=null;S.tab="locks";toast("Verified and locked "+monthLabel(l.month)+". Fee "+inr(l.fee)+".")}catch(e){toast(e.message)}}
+async function flag(id){try{await API.flag(id,"Suspected resale or false emergency.");toast("Flagged. Tickets cancelled with no refund.")}catch(e){toast(e.message)}}
+function viewHow(){return`<div class="card"><h3>How it protects airline revenue</h3><p>The fee is non-refundable and the fare cap sits at the month’s 75th percentile, so the airline never sells below typical demand. Dates open only where inventory remains, and the cap beats last-minute pricing only for travellers who locked early. Medical and delivery reasons get one free month change, which keeps goodwill high where flexibility matters most.</p>
+ <p class="mut">All airlines, fares and seats here are generated dummy data.</p></div>`}
+function render(){const tabs=[["search","Search"],["locks","My locks"+(S.locks.length?" ("+S.locks.length+")":"")],["api","API console"],["rules","Rules and penalties"],["how","How it works"]];
+ $("#app").innerHTML=`<header><div><div class="logo">FYI<i>FREE</i></div><p class="sub">Month-Lock flight booking · dummy data</p></div><nav>${tabs.map(([k,v])=>`<button class="${S.tab===k?"on":""}" onclick="S.tab='${k}';render()">${v}</button>`).join("")}</nav></header>`+
+ {search:viewSearch,verify:viewVerify,locks:viewLocks,api:viewApi,rules:viewRules,how:viewHow}[S.tab]()+(S.toast?`<div class="toast" role="status">${esc(S.toast)}</div>`:"");}
+render();
+</script></body></html>
